@@ -21,11 +21,13 @@ Game.Items[3] = {'Name':'Refurbished Desktop', 'Price':200, 'VPS':700, 'Power':3
 Game.Items[4] = {'Name':'Dedicated Server', 'Price':2000, 'VPS':10000, 'Power':800, 'Description':'A dedicated single-CPU server with a 2.8Ghz processor and 8GB of RAM.'};
 Game.Items[5] = {'Name':'Blade Server', 'Price':30000, 'VPS':1000000, 'Power':2000, 'Description':'A rack-mounted Blade Server with two 3.2Ghz processors and 32GB of RAM.'};
 Game.Items[6] = {'Name':'Amazon EC2', 'Price':250000, 'VPS':15000000, 'Power':15000, 'Description':'An Amazon EC2 instance with 4 virtual CPUs at 3.2Ghz and 64GB of RAM. Unfortunately, you have to pay the power bill too.'};
+Game.Items[7] = {'Name':'The "Cloud"', 'Price':9999999, 'VPS':9999999999, 'Power':999999, 'Description':'The Cloud can do anything, for the right price.'};
 
 Game.Upgrades = [];
 Game.Upgrades[0] = {'Name':'Improved Breaker Box', 'Price':250, 'Type': Game.UPGRADE_TYPES.POWER, 'Amount':500, 'Description':'Upgrades to maximum power usage by 500 watts.', 'PwrReq':250, 'MnyReq':0, 'VPSReq':100, 'Unlocked':false, 'Purchased':false }
 Game.Upgrades[1] = {'Name':'50amp Fuses', 'Price':400, 'Type': Game.UPGRADE_TYPES.POWER, 'Amount':500, 'Description':'Upgrades to maximum power usage by another 500 watts.', 'PwrReq':500, 'MnyReq':0, 'VPSReq':200, 'Unlocked':false, 'Purchased':false }
 Game.Upgrades[2] = {'Name':'80amp Fuses', 'Price':1250, 'Type': Game.UPGRADE_TYPES.POWERPCT, 'Amount':0.25, 'Description':'Upgrades to maximum power usage by 25%.', 'PwrReq':501, 'MnyReq':0, 'VPSReq':200, 'Unlocked':false, 'Purchased':false }
+Game.Upgrades[3] = {'Name':'Dedicated Line', 'Price':2000, 'Type': Game.UPGRADE_TYPES.POWER, 'Amount':5000, 'Description':'Upgrades to maximum power usage by 25%.', 'PwrReq':1000, 'MnyReq':0, 'VPSReq':200, 'Unlocked':false, 'Purchased':false }
 
 Game.infrastructure = [];
 
@@ -89,9 +91,9 @@ function Run() {
    		var mps = vps * Game.VPSRatio;
    		var tickMoney = mps * 0.1;
    		AddMoney(tickMoney);
-   		$('#lblMoney').text(Game.Money.toFixed(2));
-   		$('#lblVPS').text(vps.toFixed(0));
-   		$('#lblMPS').text(mps.toFixed(2));
+   		$('#lblMoney').text(commafy(Game.Money.toFixed(2)));
+   		$('#lblVPS').text(commafy(vps.toFixed(0)));
+   		$('#lblMPS').text(commafy(mps.toFixed(2)));
    }
    UnlockUpgrades();
 }
@@ -141,7 +143,7 @@ function PurchaseUpgrade(i) {
 	var Upgrade = Game.Upgrades[i];
 	if(Upgrade.Price <= Game.Money && !Upgrade.Purchased) {
 		Upgrade.Purchased = true;
-		RemoveMoney(Upgrade.Amount);
+		RemoveMoney(Upgrade.Price);
 
 		if(Upgrade.Type == Game.UPGRADE_TYPES.POWER) {
 			Game.Power += Upgrade.Amount;
@@ -195,7 +197,7 @@ function RemoveMoney(i) {
 function CreatePurchaseEntries() {
 	var purchaseBox = $('#purchaseBox');
 	for(var i=0; i<Game.Items.length; i++) {
-		var appendText = "<div class='itemBox' title='"+CreateHardwareTooltip(Game.Items[i])+"'><label for='purchaseButton"+i+"'>" + Game.Items[i].Name + "</label><input type='Button' class='purchaseButton' id='purchaseButton"+i+"' value='$"+Game.Items[i].Price+"' /></div>";
+		var appendText = "<div class='itemBox' title='"+CreateHardwareTooltip(Game.Items[i])+"'><label for='purchaseButton"+i+"'>" + Game.Items[i].Name + "</label><input type='Button' class='purchaseButton' id='purchaseButton"+i+"' value='$"+commafy(Game.Items[i].Price)+"' /></div>";
 		$(purchaseBox).append(appendText);
 		RegisterPurchaseHook(i);
 	}
@@ -210,7 +212,7 @@ function RegisterPurchaseHook(i) {
 
 function CreateHardwareTooltip(item) {
 	//TODO: create this
-	return item.Description + " [Power:" + item.Power + "]";
+	return item.Description + " [Power:" + commafy(item.Power) + "]";
 }
 
 function UpdateInfrastructure() {
@@ -227,8 +229,8 @@ function UpdateInfrastructure() {
 
 function UpdatePower() {
 	var used = CalculatePowerUsed();
-	$('#powerProgressBar').prop('title', "" + used + " / " + Game.Power);
-	$('#powerProgressLabel').text("Power: " + used + " / " + Game.Power);
+	$('#powerProgressBar').prop('title', "" + commafy(used) + " / " + commafy(Game.Power));
+	$('#powerProgressLabel').text("Power: " + commafy(used) + " / " + commafy(Game.Power));
 	var amount = CalculatePowerPercentage() * 100.0;
 	$('#powerProgressBar').progressbar({
 		value: amount
@@ -241,7 +243,7 @@ function UpdatePower() {
 function FlashPower() {
 	var pbValue = $('#powerProgressBar').find('.ui-progressbar-value');
 	pbValue.addClass('progress-flash');
-	setTimeout(UnflashPower,250);
+	setTimeout(UnflashPower,150);
 }
 
 function UnflashPower() {
@@ -249,11 +251,23 @@ function UnflashPower() {
 	pbValue.removeClass('progress-flash');
 }
 
+function FlashMoney() {
+	var divMoney = $('#lblMoney').parent();
+	divMoney.addClass('progress-flash');
+	setTimeout(UnflashMoney,150);
+}
+
+function UnflashMoney() {
+	var divMoney = $('#lblMoney').parent();
+	divMoney.removeClass('progress-flash');
+}
+
 //Debugging function only
 function log(str) {
 	window.console&&console.log(str);
 }
 
+//Purchases an item, provided that the requirements are met
 function Purchase(i) {
 	var item = Game.Items[i];
 	if(item.Price <= Game.Money) {
@@ -265,5 +279,15 @@ function Purchase(i) {
 		RemoveMoney(item.Price);
 		Game.infrastructure[i]++;
 		UpdateInfrastructure();
+	} else {
+		FlashMoney();
+		return;
 	}
+}
+
+//Regex goodness to add commas to a number
+function commafy(num) {
+  var parts = num.toString().split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return parts.join(".");
 }
