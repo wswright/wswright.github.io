@@ -2,13 +2,15 @@ var Game = [];
 var StartupName;
 Game.Money = 0.0;
 Game.VPSRatio = 0.001;
+//Game.VPSRatio = 0.1;
 Game.SEOAmount = 1000;
 Game.Power = 500;
 
 Game.UPGRADE_TYPES = {
   POWER : {value: 0, name: "Power"}, 			//Upgrades to the maximum power usage
-  VPSRATIO: {value: 1, name: "VPS Ratio"}, 		//Upgrades to the VPS Ratio
-  SEOAMOUNT : {value: 2, name: "SEO Amount"}	//Upgrades to the SEO Amount
+  POWERPCT : {value: 1, name: "Power Percent"}, //Upgrades to the maximum power usage by increasing it by a percentage
+  VPSRATIO: {value: 2, name: "VPS Ratio"}, 		//Upgrades to the VPS Ratio
+  SEOAMOUNT : {value: 3, name: "SEO Amount"}	//Upgrades to the SEO Amount
 };
 
 Game.Items = [];
@@ -21,7 +23,9 @@ Game.Items[5] = {'Name':'Blade Server', 'Price':30000, 'VPS':1000000, 'Power':20
 Game.Items[6] = {'Name':'Amazon EC2', 'Price':250000, 'VPS':15000000, 'Power':15000, 'Description':'An Amazon EC2 instance with 4 virtual CPUs at 3.2Ghz and 64GB of RAM. Unfortunately, you have to pay the power bill too.'};
 
 Game.Upgrades = [];
-Game.Upgrades[0] = {'Name':'Improved Breaker Box', 'Price':250, 'Type': Game.UPGRADE_TYPES.POWER, 'Description':'Upgrades to maximum power usage by 500 watts.', 'PwrReq':250, 'MnyReq':0, 'VPSReq':100}
+Game.Upgrades[0] = {'Name':'Improved Breaker Box', 'Price':250, 'Type': Game.UPGRADE_TYPES.POWER, 'Amount':500, 'Description':'Upgrades to maximum power usage by 500 watts.', 'PwrReq':250, 'MnyReq':0, 'VPSReq':100, 'Unlocked':false, 'Purchased':false }
+Game.Upgrades[1] = {'Name':'50amp Fuses', 'Price':400, 'Type': Game.UPGRADE_TYPES.POWER, 'Amount':500, 'Description':'Upgrades to maximum power usage by another 500 watts.', 'PwrReq':500, 'MnyReq':0, 'VPSReq':200, 'Unlocked':false, 'Purchased':false }
+Game.Upgrades[2] = {'Name':'80amp Fuses', 'Price':1250, 'Type': Game.UPGRADE_TYPES.POWERPCT, 'Amount':0.25, 'Description':'Upgrades to maximum power usage by 25%.', 'PwrReq':501, 'MnyReq':0, 'VPSReq':200, 'Unlocked':false, 'Purchased':false }
 
 Game.infrastructure = [];
 
@@ -89,6 +93,73 @@ function Run() {
    		$('#lblVPS').text(vps.toFixed(0));
    		$('#lblMPS').text(mps.toFixed(2));
    }
+   UnlockUpgrades();
+}
+
+//Checks all upgrades to see if the user meets the requirements to unlock them
+//If they do, this unlocks them
+function UnlockUpgrades() {
+	var pwr = CalculatePowerUsed();
+	var mny = Game.Money;
+	var vps = CalculateVPS();
+	var dirty = false;
+	for(var i=0; i<Game.Upgrades.length; i++) {
+		if(!Game.Upgrades[i].Unlocked) {
+			//Check PwrReq, MnyReq, VPSReq
+			if(pwr >= Game.Upgrades[i].PwrReq && mny >= Game.Upgrades[i].MnyReq && vps >= Game.Upgrades[i].VPSReq) {
+				//Unlock this upgrade!
+				Game.Upgrades[i].Unlocked = true;
+				dirty = true;
+			}
+		}
+	}
+	if(dirty)
+		RenderUpgrades();
+}
+
+function RenderUpgrades() {
+	//Clear all existing upgrades
+	$('#upgradesBox').empty();
+
+	//Render unlocked and unpurchased upgrades
+	for(var i=0; i<Game.Upgrades.length; i++) {
+		if(Game.Upgrades[i].Unlocked && !Game.Upgrades[i].Purchased) {
+			var appendText = "<div id='upgrade" + i + "' class='upgradeBox' title='"+CreateUpgradeTooltip(Game.Upgrades[i])+"'><label>" + Game.Upgrades[i].Name + "</label><span class='upgradePrice'>"+Game.Upgrades[i].Price+"</span</div>";
+			$('#upgradesBox').append(appendText);
+			RegisterUpgradeHook(i);
+		}
+	}
+}
+
+function RegisterUpgradeHook(i) {
+	$('#upgrade'+i).click(function(e) {
+		PurchaseUpgrade(i);
+	});
+}
+
+function PurchaseUpgrade(i) {
+	var Upgrade = Game.Upgrades[i];
+	if(Upgrade.Price <= Game.Money && !Upgrade.Purchased) {
+		Upgrade.Purchased = true;
+		RemoveMoney(Upgrade.Amount);
+
+		if(Upgrade.Type == Game.UPGRADE_TYPES.POWER) {
+			Game.Power += Upgrade.Amount;
+			UpdatePower();
+		} else if(Upgrade.Type == Game.UPGRADE_TYPES.POWERPCT) {
+			Game.Power *= (1.0+Upgrade.Amount);
+			UpdatePower();
+		} else if(Upgrade.Type == Game.UPGRADE_TYPES.VPSRATIO) {
+
+		} else if(Upgrade.Type == Game.UPGRADE_TYPES.SEOAMOUNT) {
+
+		}
+		RenderUpgrades();
+	}
+}
+
+function CreateUpgradeTooltip(upgrade) {
+	return upgrade.Description;
 }
 
 function CalculateVPS() {
@@ -130,6 +201,13 @@ function CreatePurchaseEntries() {
 	}
 }
 
+function RegisterPurchaseHook(i) {
+	$('#purchaseButton'+i).click(function(e) {
+		Purchase(i);
+	});
+}
+
+
 function CreateHardwareTooltip(item) {
 	//TODO: create this
 	return item.Description + " [Power:" + item.Power + "]";
@@ -140,36 +218,50 @@ function UpdateInfrastructure() {
 	infrastructureBox.empty();
 	for(var i=0; i<Game.infrastructure.length; i++) {
 		if(Game.infrastructure[i] > 0) {
-			var appendText = "<div class='itemBox'><span class='infrastructureName'>" + Game.Items[i].Name + "</span><span class='infrastructureCount'>"+Game.infrastructure[i]+"</span></div>";
+			var appendText = "<div class='itemBox'><label class='infrastructureName'>" + Game.Items[i].Name + "</label><span class='infrastructureCount'>"+Game.infrastructure[i]+"</span></div>";
 			$(infrastructureBox).append(appendText);
 		}
 	}
 	UpdatePower();
 }
 
-function UpdatePower(pwr) {
-/*	//Remove the existing caption
-	$('#powerProgressBar').children('.pbarCaption').remove();
-	$('#powerProgressBar').progressbar({
-		value: pwr
-	}).append("<div class='pbarCaption'>Power</span>");
-	$('#powerProgressBar').prop('title', "" + pwr + " / " + Game.Power);*/
-	$('#powerProgressLabel').text("Power: " + CalculatePowerUsed() + " / " + Game.Power);
+function UpdatePower() {
+	var used = CalculatePowerUsed();
+	$('#powerProgressBar').prop('title', "" + used + " / " + Game.Power);
+	$('#powerProgressLabel').text("Power: " + used + " / " + Game.Power);
 	var amount = CalculatePowerPercentage() * 100.0;
 	$('#powerProgressBar').progressbar({
 		value: amount
 	});
 }
 
-function RegisterPurchaseHook(i) {
-	$('#purchaseButton'+i).click(function(e) {
-		Purchase(i);
-	});
+
+//Flashes the power progress bar red momentarily to indicate that
+//the user tried to exceed the max power available
+function FlashPower() {
+	var pbValue = $('#powerProgressBar').find('.ui-progressbar-value');
+	pbValue.addClass('progress-flash');
+	setTimeout(UnflashPower,250);
+}
+
+function UnflashPower() {
+	var pbValue = $('#powerProgressBar').find('.ui-progressbar-value');
+	pbValue.removeClass('progress-flash');
+}
+
+//Debugging function only
+function log(str) {
+	window.console&&console.log(str);
 }
 
 function Purchase(i) {
 	var item = Game.Items[i];
 	if(item.Price <= Game.Money) {
+		if(CalculatePowerUsed() + item.Power > Game.Power) {
+			//Buying this would exceed the available power
+			FlashPower();
+			return;
+		}
 		RemoveMoney(item.Price);
 		Game.infrastructure[i]++;
 		UpdateInfrastructure();
