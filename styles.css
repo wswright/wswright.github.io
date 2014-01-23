@@ -1,0 +1,79 @@
+.itemBox {
+	margin-top: 2px;
+	margin-bottom: 2px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	padding-left: 10px;
+	padding-right: 10px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	#width: 250px;
+	#height: 30px;
+	background-color: #AAAAAA;
+}
+
+.purchaseButton {
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	background-color: #DDDDDD;
+	float: right;
+}
+
+#lblMoney, #lblVPS, #lblMPS, #lblRatio, .infrastructureCount {
+	float: right;
+}
+
+#lblMoney:before, #lblMPS:before, #lblRatio:before {
+	content: '$';
+}
+
+#seoBox {
+	text-align: center;
+}
+
+#btnSEO {
+	width: 200px;
+	height: 100px;
+	background-color: #DDDDDD;
+	-webkit-border-radius: 35px;
+	-moz-border-radius: 35px;
+	-border-radius: 35px;
+	border: 1px solid #000000;
+}
+
+.ui-progressbar {
+	position: relative;
+	text-align: center;
+}
+
+#powerProgressBar {
+	text-align: center;
+}
+
+.progress-label {
+	position: absolute;
+	left: 30%;
+	#top: 4px;
+	padding-top: 3px;
+	font-weight: bold;
+	text-shadow: 1px 1px 0 #fff;
+}
+
+.ui-tooltip {
+	-webkit-border-radius: 15px;
+	-moz-border-radius: 15px;
+	-border-radius: 15px;
+	border: 1px solid #000000;
+}
+
+.ui-tooltip-content {
+	font-size: 0.75em;
+}
+
+.nameStartupDiv {
+	text-align: center;
+	width: 100%;
+	padding-top: 100px;
+}

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<TITLE>Startup</TITLE>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link rel="stylesheet" type="text/css" href="styles.css" />
+		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	    <!--[if lt IE 9]>
+	      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+	      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+	    <![endif]-->
+	</head>
+	<body>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+		<script src="startup.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+		
+		<h1 id="startupNameHeader">Startup</h1>
+		<div class="nameStartupDiv">
+			<form id="startupName-Form">
+				<label for="startupNameText">Name your Startup:</label>
+				<input type="text" name="startupName" id="startupName-Text" />
+				<input type="submit" name="startupNameSubmit" id="startupNameSubmit-Button" />
+			</form>
+		</div>
+		<div class="mainContent">
+			<div class="col-md-12" id="seoBox">
+				<input type="button" id="btnSEO" value="Perform SEO" />
+			</div>
+			<div class="col-md-3" id="purchaseBoxOuter">
+				<h2>Hardware</h2>
+				<div id="purchaseBox">
+				</div>
+			</div>
+			<div class="col-md-3" id="views">
+				<h2>Views</h2>
+				<div id="viewBox">
+					<div class="itemBox">
+						<label for="lblMoney">Money:</label><span id="lblMoney"></span>
+					</div>
+					<div class="itemBox">
+						<label for="lblMPS">Money/s:</label><span id="lblMPS"></span>
+					</div>
+					<div class="itemBox">
+						<label for="lblVPS">Views/s:</label><span id="lblVPS"></span>
+					</div>
+					<div class="itemBox">
+						<label for="lblRatio">$/View:</label><span id="lblRatio"></span>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3" id="infrastructureBoxOuter">
+				<h2>Infrastructure</h2>
+				<div id="powerProgressBar">
+					<div id="powerProgressLabel" class="progress-label">Power:</div>
+				</div>
+				<div id="infrastructureBox">
+				</div>
+			</div>
+			<div class="col-md-3" id="upgradesBoxOuter">
+				<h2>Upgrades</h2>
+				<div id="upgradesBox">
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
